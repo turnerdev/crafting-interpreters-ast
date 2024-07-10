@@ -14,7 +14,7 @@
         in {
           lox = pkgs.stdenv.mkDerivation {
             pname = "Lox";
-            version = "1.0";
+            version = "1.2";
             buildInputs = with pkgs; [ jdk ];
             src = ./.;
             buildPhase = ''
@@ -38,6 +38,7 @@
             buildInputs = with pkgs; [
               jdk
               google-java-format
+              rlwrap
               self.packages.${system}.lox
             ];
           };
