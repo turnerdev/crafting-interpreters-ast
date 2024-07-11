@@ -1,29 +1,13 @@
 package com.craftinginterpreters.lox;
 
-class AstPrinter implements Expr.Visitor<String> {
+class AstPrinter {
   String print(Expr expr) {
-    return expr.accept(this);
-  }
-
-  @Override
-  public String visitBinaryExpr(Expr.Binary expr) {
-    return parenthesize(expr.operator.lexeme, expr.left, expr.right);
-  }
-
-  @Override
-  public String visitGroupingExpr(Expr.Grouping expr) {
-    return parenthesize("group", expr.expression);
-  }
-
-  @Override
-  public String visitLiteralExpr(Expr.Literal expr) {
-    if (expr.value == null) return "nil";
-    return expr.value.toString();
-  }
-
-  @Override
-  public String visitUnaryExpr(Expr.Unary expr) {
-    return parenthesize(expr.operator.lexeme, expr.right);
+    return switch (expr) {
+      case Expr.Binary e -> parenthesize(e.operator.lexeme, e.left, e.right);
+      case Expr.Grouping e -> parenthesize("group", e.expression);
+      case Expr.Literal e -> e.value == null ? "nil" : e.value.toString();
+      case Expr.Unary e -> parenthesize(e.operator.lexeme, e.right);
+    };
   }
 
   private String parenthesize(String name, Expr... exprs) {
@@ -32,7 +16,7 @@ class AstPrinter implements Expr.Visitor<String> {
     builder.append("(").append(name);
     for (Expr expr : exprs) {
       builder.append(" ");
-      builder.append(expr.accept(this));
+      builder.append(this.print(expr));
     }
     builder.append(")");
 
