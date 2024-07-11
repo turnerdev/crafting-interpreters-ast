@@ -14,8 +14,8 @@
         in {
           lox = pkgs.stdenv.mkDerivation {
             pname = "Lox";
-            version = "1.2";
-            buildInputs = with pkgs; [ jdk ];
+            version = "1.3";
+            buildInputs = with pkgs; [ jdk rlwrap ];
             src = ./.;
             buildPhase = ''
               javac -d $out com/craftinginterpreters/lox/Lox.java
@@ -24,7 +24,7 @@
               mkdir -p $out/bin
               cat > $out/bin/lox <<EOF
               #!${pkgs.stdenv.shell}
-              exec ${pkgs.jdk}/bin/java -cp "$out" com.craftinginterpreters.lox.Lox "\$@"
+              exec ${pkgs.rlwrap}/bin/rlwrap ${pkgs.jdk}/bin/java -cp "$out" com.craftinginterpreters.lox.Lox "\$@"
               EOF
               chmod +x $out/bin/lox
             '';
@@ -38,7 +38,6 @@
             buildInputs = with pkgs; [
               jdk
               google-java-format
-              rlwrap
               self.packages.${system}.lox
             ];
           };
