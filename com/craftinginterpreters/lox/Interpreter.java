@@ -1,6 +1,10 @@
 package com.craftinginterpreters.lox;
 
+import java.util.List;
+
 class Interpreter {
+  private Environment environment = new Environment();
+
   void interpret(Expr expression) {
     try {
       Object value = evaluate(expression);
@@ -10,10 +14,49 @@ class Interpreter {
     }
   }
 
+  void interpret(List<Stmt> statements) {
+    try {
+      for (Stmt statement : statements) {
+        evaluate(statement);
+      }
+    } catch (RuntimeError error) {
+      Lox.runtimeError(error);
+    }
+  }
+
+  Object evaluate(Stmt stmt) {
+    return switch (stmt) {
+      case Stmt.Expression s -> evaluate(s.expression);
+      case Stmt.Print s -> {
+        Object value = evaluate(s.expression);
+        System.out.println(stringify(value));
+        yield null;
+      }
+      case Stmt.Var s -> {
+        Object value = null;
+        if (s.initializer != null) {
+          value = evaluate(s.initializer);
+        }
+        environment.define(s.name.lexeme, value);
+        yield null;
+      }
+      case Stmt.Block s -> {
+        executeBlock(s.statements, new Environment(environment));
+        yield null;
+      }
+    };
+  }
+
   Object evaluate(Expr expr) {
     return switch (expr) {
       case Expr.Grouping e -> evaluate(e.expression);
       case Expr.Literal e -> e.value;
+      case Expr.Variable e -> environment.get(e.name);
+      case Expr.Assign e -> {
+        Object value = evaluate(e.value);
+        environment.assign(e.name, value);
+        yield value;
+      }
       case Expr.Unary e -> {
         Object right = evaluate(e.right);
         switch (e.operator.type) {
@@ -79,6 +122,19 @@ class Interpreter {
     if (a == null) return false;
 
     return a.equals(b);
+  }
+
+  void executeBlock(List<Stmt> statements, Environment environment) {
+    Environment previous = this.environment;
+    try {
+      this.environment = environment;
+
+      for (Stmt statement : statements) {
+        evaluate(statement);
+      }
+    } finally {
+      this.environment = previous;
+    }
   }
 
   private String stringify(Object object) {
